@@ -1,1 +1,1 @@
-JOptionPane.showMessageDialog(instance.frame, "Bonjour", "Test", JOptionPane.INFORMATION_MESSAGE);
+JOptionPane.showMessageDialog(null, "Bonjour", "Test", JOptionPane.INFORMATION_MESSAGE);
