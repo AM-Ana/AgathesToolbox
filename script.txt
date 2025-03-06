@@ -1,6 +1,6 @@
 String userHome = System.getProperty("user.home");
 File errorLog = new File(userHome, "erreurs.txt");
-ProcessBuilder processBuilder = new ProcessBuilder("java -jar \"C:\\Program Files\\Agathe's Toolbox\\app\\AgathesToolbox-1.2.6.jar\" testgit");
+ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "C:\\Program Files\\Agathe's Toolbox\\app\\AgathesToolbox-1.2.6.jar", "testgit");
 processBuilder.redirectErrorStream(true);
 processBuilder.redirectOutput(errorLog);
 try {
