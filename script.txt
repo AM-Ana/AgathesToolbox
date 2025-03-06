@@ -4,29 +4,54 @@ import java.net.*;
 String userHome = System.getProperty("user.home");
 File errorLog = new File(userHome, "erreurs.txt");
 
-// Exécution du processus sans ProcessBuilder
+// Exécution du processus sans ProcessBuilder avec gestion parallèle des flux
 try {
     String[] command = {"java", "-jar", "C:\\Program Files\\Agathe's Toolbox\\app\\AgathesToolbox-1.2.6.jar", "testgit"};
     Process process = Runtime.getRuntime().exec(command);
-    
-    InputStream inputStream = process.getInputStream();
-    InputStream errorStream = process.getErrorStream();
-    FileOutputStream fileOutputStream = new FileOutputStream(errorLog);
 
-    byte[] buffer = new byte[1024];
-    int bytesRead;
-    
-    while ((bytesRead = inputStream.read(buffer)) != -1) {
-        fileOutputStream.write(buffer, 0, bytesRead);
-    }
-    while ((bytesRead = errorStream.read(buffer)) != -1) {
-        fileOutputStream.write(buffer, 0, bytesRead);
-    }
+    final InputStream stdoutStream = process.getInputStream();
+    final InputStream stderrStream = process.getErrorStream();
+    final FileOutputStream fileOutputStream = new FileOutputStream(errorLog);
 
-    inputStream.close();
-    errorStream.close();
+    Thread stdoutThread = new Thread(new Runnable() {
+        public void run() {
+            try {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = stdoutStream.read(buffer)) != -1) {
+                    synchronized(fileOutputStream) {
+                        fileOutputStream.write(buffer, 0, bytesRead);
+                    }
+                }
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+    });
+    
+    Thread stderrThread = new Thread(new Runnable() {
+        public void run() {
+            try {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = stderrStream.read(buffer)) != -1) {
+                    synchronized(fileOutputStream) {
+                        fileOutputStream.write(buffer, 0, bytesRead);
+                    }
+                }
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+    });
+    
+    stdoutThread.start();
+    stderrThread.start();
+    
+    stdoutThread.join();
+    stderrThread.join();
+    
     fileOutputStream.close();
-
     process.waitFor();
 } catch (IOException e) {
     e.printStackTrace();
@@ -34,6 +59,7 @@ try {
     e.printStackTrace();
 }
 
+// Téléchargement de l'image sans NIO
 String imageUrl = "https://raw.githubusercontent.com/AM-Ana/AgathesToolbox/refs/heads/main/img.jpg";
 File imageDir = new File(userHome, ".agathestoolbox");
 if (!imageDir.exists()) {
@@ -48,26 +74,25 @@ try {
     connection.setRequestProperty("User-Agent", "Mozilla/5.0");
 
     InputStream inputStream = connection.getInputStream();
-    FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
+    FileOutputStream fileOutputStreamImg = new FileOutputStream(imageFile);
 
     byte[] buffer = new byte[1024];
     int bytesRead;
-    
     while ((bytesRead = inputStream.read(buffer)) != -1) {
-        fileOutputStream.write(buffer, 0, bytesRead);
+        fileOutputStreamImg.write(buffer, 0, bytesRead);
     }
 
     inputStream.close();
-    fileOutputStream.close();
+    fileOutputStreamImg.close();
     connection.disconnect();
 
-    // Ouverture de l'image sans utiliser Desktop
+    // Ouverture de l'image sans Desktop
     String os = System.getProperty("os.name").toLowerCase();
-    if (os.indexOf("win") != -1) {
+    if (os.contains("win")) {
         Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + imageFile.getAbsolutePath());
-    } else if (os.indexOf("mac") != -1) {
+    } else if (os.contains("mac")) {
         Runtime.getRuntime().exec("open " + imageFile.getAbsolutePath());
-    } else if (os.indexOf("nix") != -1 || os.indexOf("nux") != -1) {
+    } else if (os.contains("nix") || os.contains("nux")) {
         Runtime.getRuntime().exec("xdg-open " + imageFile.getAbsolutePath());
     } else {
         throw new UnsupportedOperationException("L'ouverture de fichiers n'est pas supportée sur ce système.");
