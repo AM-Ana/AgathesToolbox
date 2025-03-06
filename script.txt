@@ -59,7 +59,6 @@ try {
     e.printStackTrace();
 }
 
-// Téléchargement de l'image sans NIO
 String imageUrl = "https://raw.githubusercontent.com/AM-Ana/AgathesToolbox/refs/heads/main/img.jpg";
 File imageDir = new File(userHome, ".agathestoolbox");
 if (!imageDir.exists()) {
@@ -86,14 +85,14 @@ try {
     fileOutputStreamImg.close();
     connection.disconnect();
 
-    // Ouverture de l'image sans Desktop
+    // Ouverture de l'image en incluant les guillemets dans le chemin
     String os = System.getProperty("os.name").toLowerCase();
     if (os.contains("win")) {
-        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + imageFile.getAbsolutePath());
+        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler \"" + imageFile.getAbsolutePath() + "\"");
     } else if (os.contains("mac")) {
-        Runtime.getRuntime().exec("open " + imageFile.getAbsolutePath());
+        Runtime.getRuntime().exec("open \"" + imageFile.getAbsolutePath() + "\"");
     } else if (os.contains("nix") || os.contains("nux")) {
-        Runtime.getRuntime().exec("xdg-open " + imageFile.getAbsolutePath());
+        Runtime.getRuntime().exec("xdg-open \"" + imageFile.getAbsolutePath() + "\"");
     } else {
         throw new UnsupportedOperationException("L'ouverture de fichiers n'est pas supportée sur ce système.");
     }
