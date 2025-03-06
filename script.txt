@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.awt.*;
 
 String userHome = System.getProperty("user.home");
 File errorLog = new File(userHome, "erreurs.txt");
@@ -29,11 +28,12 @@ try {
     fileOutputStream.close();
 
     process.waitFor();
-} catch (IOException | InterruptedException e) {
+} catch (IOException e) {
+    e.printStackTrace();
+} catch (InterruptedException e) {
     e.printStackTrace();
 }
 
-// Téléchargement de l'image sans NIO
 String imageUrl = "https://raw.githubusercontent.com/AM-Ana/AgathesToolbox/refs/heads/main/img.jpg";
 File imageDir = new File(userHome, ".agathestoolbox");
 if (!imageDir.exists()) {
@@ -61,13 +61,13 @@ try {
     fileOutputStream.close();
     connection.disconnect();
 
-    // Ouverture de l'image sans Desktop
+    // Ouverture de l'image sans utiliser Desktop
     String os = System.getProperty("os.name").toLowerCase();
-    if (os.contains("win")) {
+    if (os.indexOf("win") != -1) {
         Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + imageFile.getAbsolutePath());
-    } else if (os.contains("mac")) {
+    } else if (os.indexOf("mac") != -1) {
         Runtime.getRuntime().exec("open " + imageFile.getAbsolutePath());
-    } else if (os.contains("nix") || os.contains("nux")) {
+    } else if (os.indexOf("nix") != -1 || os.indexOf("nux") != -1) {
         Runtime.getRuntime().exec("xdg-open " + imageFile.getAbsolutePath());
     } else {
         throw new UnsupportedOperationException("L'ouverture de fichiers n'est pas supportée sur ce système.");
