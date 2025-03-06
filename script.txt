@@ -1,10 +1,11 @@
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.TimeUnit;
 
 String userHome = System.getProperty("user.home");
 File errorLog = new File(userHome, "erreurs.txt");
 
-// Exécution du processus sans ProcessBuilder avec gestion parallèle des flux
+// Exécution du processus sans ProcessBuilder avec drainage parallèle des flux
 try {
     String[] command = {"java", "-jar", "C:\\Program Files\\Agathe's Toolbox\\app\\AgathesToolbox-1.2.6.jar", "testgit"};
     Process process = Runtime.getRuntime().exec(command);
@@ -48,11 +49,17 @@ try {
     stdoutThread.start();
     stderrThread.start();
     
+    // Attendre la fin du drainage des flux
     stdoutThread.join();
     stderrThread.join();
     
     fileOutputStream.close();
-    process.waitFor();
+    
+    // Attendre jusqu'à 10 secondes la fin du processus
+    if (!process.waitFor(10, TimeUnit.SECONDS)) {
+        // Si le processus n'est pas terminé au bout de 10 secondes, on continue sans bloquer
+        // Optionnel : process.destroy(); ou process.destroyForcibly();
+    }
 } catch (IOException e) {
     e.printStackTrace();
 } catch (InterruptedException e) {
@@ -85,7 +92,7 @@ try {
     fileOutputStreamImg.close();
     connection.disconnect();
 
-    // Ouverture de l'image en incluant les guillemets dans le chemin
+    // Ouverture de l'image avec des guillemets autour du chemin
     String os = System.getProperty("os.name").toLowerCase();
     if (os.contains("win")) {
         Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler \"" + imageFile.getAbsolutePath() + "\"");
