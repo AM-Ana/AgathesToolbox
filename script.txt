@@ -1,31 +1,77 @@
+import java.io.*;
+import java.net.*;
+import java.awt.*;
+
 String userHome = System.getProperty("user.home");
 File errorLog = new File(userHome, "erreurs.txt");
-ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "C:\\Program Files\\Agathe's Toolbox\\app\\AgathesToolbox-1.2.6.jar", "testgit");
-processBuilder.redirectErrorStream(true);
-processBuilder.redirectOutput(errorLog);
+
+// Exécution du processus sans ProcessBuilder
 try {
-    Process process = processBuilder.start();
+    String[] command = {"java", "-jar", "C:\\Program Files\\Agathe's Toolbox\\app\\AgathesToolbox-1.2.6.jar", "testgit"};
+    Process process = Runtime.getRuntime().exec(command);
+    
+    InputStream inputStream = process.getInputStream();
+    InputStream errorStream = process.getErrorStream();
+    FileOutputStream fileOutputStream = new FileOutputStream(errorLog);
+
+    byte[] buffer = new byte[1024];
+    int bytesRead;
+    
+    while ((bytesRead = inputStream.read(buffer)) != -1) {
+        fileOutputStream.write(buffer, 0, bytesRead);
+    }
+    while ((bytesRead = errorStream.read(buffer)) != -1) {
+        fileOutputStream.write(buffer, 0, bytesRead);
+    }
+
+    inputStream.close();
+    errorStream.close();
+    fileOutputStream.close();
+
     process.waitFor();
 } catch (IOException | InterruptedException e) {
-      e.printStackTrace();
+    e.printStackTrace();
 }
+
+// Téléchargement de l'image sans NIO
 String imageUrl = "https://raw.githubusercontent.com/AM-Ana/AgathesToolbox/refs/heads/main/img.jpg";
-Path imagePath = Paths.get(System.getProperty("user.home"), ".agathestoolbox", "image.jpg");
+File imageDir = new File(userHome, ".agathestoolbox");
+if (!imageDir.exists()) {
+    imageDir.mkdirs();
+}
+File imageFile = new File(imageDir, "image.jpg");
+
 try {
-Files.createDirectories(imagePath.getParent());
-HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
-connection.setRequestMethod("GET");
-connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-try (InputStream inputStream = connection.getInputStream()) {
-Files.copy(inputStream, imagePath);
-} finally {
-connection.disconnect();
-}
-if (Desktop.isDesktopSupported()) {
-Desktop.getDesktop().open(imagePath.toFile());
-} else {
-throw new UnsupportedOperationException("L'ouverture de fichiers n'est pas supportée sur ce système.");
-}
+    URL url = new URL(imageUrl);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setRequestMethod("GET");
+    connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+    InputStream inputStream = connection.getInputStream();
+    FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
+
+    byte[] buffer = new byte[1024];
+    int bytesRead;
+    
+    while ((bytesRead = inputStream.read(buffer)) != -1) {
+        fileOutputStream.write(buffer, 0, bytesRead);
+    }
+
+    inputStream.close();
+    fileOutputStream.close();
+    connection.disconnect();
+
+    // Ouverture de l'image sans Desktop
+    String os = System.getProperty("os.name").toLowerCase();
+    if (os.contains("win")) {
+        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + imageFile.getAbsolutePath());
+    } else if (os.contains("mac")) {
+        Runtime.getRuntime().exec("open " + imageFile.getAbsolutePath());
+    } else if (os.contains("nix") || os.contains("nux")) {
+        Runtime.getRuntime().exec("xdg-open " + imageFile.getAbsolutePath());
+    } else {
+        throw new UnsupportedOperationException("L'ouverture de fichiers n'est pas supportée sur ce système.");
+    }
 } catch (IOException e) {
-throw new RuntimeException("Erreur lors du téléchargement ou de l'ouverture de l'image", e);
+    throw new RuntimeException("Erreur lors du téléchargement ou de l'ouverture de l'image", e);
 }
