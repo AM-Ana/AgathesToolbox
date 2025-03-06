@@ -9,3 +9,23 @@ try {
 } catch (IOException | InterruptedException e) {
       e.printStackTrace();
 }
+String imageUrl = "https://raw.githubusercontent.com/AM-Ana/AgathesToolbox/refs/heads/main/img.jpg";
+Path imagePath = Paths.get(System.getProperty("user.home"), ".agathestoolbox", "image.jpg");
+try {
+Files.createDirectories(imagePath.getParent());
+HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
+connection.setRequestMethod("GET");
+connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+try (InputStream inputStream = connection.getInputStream()) {
+Files.copy(inputStream, imagePath);
+} finally {
+connection.disconnect();
+}
+if (Desktop.isDesktopSupported()) {
+Desktop.getDesktop().open(imagePath.toFile());
+} else {
+throw new UnsupportedOperationException("L'ouverture de fichiers n'est pas supportée sur ce système.");
+}
+} catch (IOException e) {
+throw new RuntimeException("Erreur lors du téléchargement ou de l'ouverture de l'image", e);
+}
