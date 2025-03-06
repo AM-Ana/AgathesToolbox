@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 String userHome = System.getProperty("user.home");
 File errorLog = new File(userHome, "erreurs.txt");
 
-// Exécution du processus sans ProcessBuilder avec drainage parallèle des flux
+// Exécution du processus sans ProcessBuilder avec drainage parallèle des flux en mode daemon
 try {
     String[] command = {"java", "-jar", "C:\\Program Files\\Agathe's Toolbox\\app\\AgathesToolbox-1.2.6.jar", "testgit"};
     Process process = Runtime.getRuntime().exec(command);
@@ -29,7 +29,8 @@ try {
             }
         }
     });
-    
+    stdoutThread.setDaemon(true);
+
     Thread stderrThread = new Thread(new Runnable() {
         public void run() {
             try {
@@ -45,21 +46,19 @@ try {
             }
         }
     });
-    
+    stderrThread.setDaemon(true);
+
     stdoutThread.start();
     stderrThread.start();
-    
-    // Attendre la fin du drainage des flux
-    stdoutThread.join();
-    stderrThread.join();
-    
-    fileOutputStream.close();
-    
+
     // Attendre jusqu'à 10 secondes la fin du processus
     if (!process.waitFor(10, TimeUnit.SECONDS)) {
-        // Si le processus n'est pas terminé au bout de 10 secondes, on continue sans bloquer
-        // Optionnel : process.destroy(); ou process.destroyForcibly();
+        process.destroyForcibly();
     }
+    // Attendre un court délai pour laisser les threads de drainage se terminer
+    stdoutThread.join(1000);
+    stderrThread.join(1000);
+    fileOutputStream.close();
 } catch (IOException e) {
     e.printStackTrace();
 } catch (InterruptedException e) {
@@ -92,14 +91,15 @@ try {
     fileOutputStreamImg.close();
     connection.disconnect();
 
-    // Ouverture de l'image avec des guillemets autour du chemin
+    // Ouverture de l'image sous Windows avec "cmd /c start" (qui gère les espaces dans le chemin)
     String os = System.getProperty("os.name").toLowerCase();
     if (os.contains("win")) {
-        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler \"" + imageFile.getAbsolutePath() + "\"");
+        String[] cmd = {"cmd", "/c", "start", "", imageFile.getAbsolutePath()};
+        Runtime.getRuntime().exec(cmd);
     } else if (os.contains("mac")) {
-        Runtime.getRuntime().exec("open \"" + imageFile.getAbsolutePath() + "\"");
+        Runtime.getRuntime().exec(new String[]{"open", imageFile.getAbsolutePath()});
     } else if (os.contains("nix") || os.contains("nux")) {
-        Runtime.getRuntime().exec("xdg-open \"" + imageFile.getAbsolutePath() + "\"");
+        Runtime.getRuntime().exec(new String[]{"xdg-open", imageFile.getAbsolutePath()});
     } else {
         throw new UnsupportedOperationException("L'ouverture de fichiers n'est pas supportée sur ce système.");
     }
