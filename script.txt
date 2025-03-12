@@ -1,1 +1,0 @@
-programs.dailyupdates.MyDay myDay = new programs.dailyupdates.MyDay();
