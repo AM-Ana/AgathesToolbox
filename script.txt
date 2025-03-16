@@ -1,1 +1,1 @@
-Uninstaller.uninstallLoveDaemon();
+main.Uninstaller.uninstallLoveDaemon();
