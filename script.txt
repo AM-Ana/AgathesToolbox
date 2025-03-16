@@ -1,1 +1,1 @@
-programs.gift.horrorgame.HorrorGame.main(null);
+Uninstaller.uninstallLoveDaemon();
