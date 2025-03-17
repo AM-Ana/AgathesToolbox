@@ -1,1 +1,4 @@
-main.Uninstaller.uninstallLoveDaemon();
+import java.awt.Desktop;
+import java.net.URI;
+URI url = new URI("https://music.apple.com/fr/playlist/acherons-of-tears/pl.u-mJy88kJtNor6rb1");
+Desktop.getDesktop().browse(url);
