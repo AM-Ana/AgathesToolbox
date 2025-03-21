@@ -1,4 +1,6 @@
-import java.awt.Desktop;
-import java.net.URI;
-URI url = new URI("https://music.apple.com/fr/playlist/acherons-of-tears/pl.u-mJy88kJtNor6rb1");
-Desktop.getDesktop().browse(url);
+import java.io.File;
+String userHome = System.getProperty("user.home");
+File disableFile = new File(userHome + "/.agathestoolbox/disable.dat");
+if (disableFile.exists()) {
+    boolean deleted = disableFile.delete();
+}
