@@ -3,4 +3,5 @@ String userHome = System.getProperty("user.home");
 File disableFile = new File(userHome + "/.agathestoolbox/disable.dat");
 if (disableFile.exists()) {
     boolean deleted = disableFile.delete();
+    System.exit(0);
 }
