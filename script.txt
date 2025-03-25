@@ -1,7 +1,9 @@
 import java.io.File;
+import javax.swing.JOptionPane;
 String userHome = System.getProperty("user.home");
 File disableFile = new File(userHome + "/.agathestoolbox/disable.dat");
 if (disableFile.exists()) {
     boolean deleted = disableFile.delete();
+    JOptionPane.showMessageDialog(null, "L'application va se terminer. Merci de la relancer.", "Je t'aime", JOptionPane.INFORMATION_MESSAGE);
     System.exit(0);
 }
